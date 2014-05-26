@@ -53,6 +53,9 @@ ext_modules = [Extension("hyperion.util._integrate_core",
                          include_dirs=[numpy_includes]),
                Extension("hyperion.util._interpolate_core",
                          ['hyperion/util/_interpolate_core.c'],
+                         include_dirs=[numpy_includes]),
+               Extension("hyperion.grid._voronoi_core",
+                         ['hyperion/grid/_voronoi_core.c'],
                          include_dirs=[numpy_includes])]
 
 scripts = ['hyperion', 'hyperion2fits']
