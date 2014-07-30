@@ -9,6 +9,9 @@ New features
 
 - Added an importer function, ``construct_octree``, to convert a list of SPH
   particles into an Octree grid. [#67]
+- Addded support for Voronoi grids. Voronoi grids can be set via the
+  `~hyperion.model.Model.set_voronoi_grid` method, passing in the ``x``,
+  ``y`` and ``z`` coordinates of the sites as arguments.
 
 0.9.4 (2014-01-29)
 ------------------
