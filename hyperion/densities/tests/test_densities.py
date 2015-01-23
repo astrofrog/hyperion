@@ -485,6 +485,17 @@ def test_power_law_cavity_invalid2():
         e.cavity = np.array([1, 2, 3])  # should be BipolarCavity instance
     assert exc.value.args[0] == 'cavity should be an instance of BipolarCavity'
 
+def test_power_law_envelope_zero_power():
+    # Regression test for when power == 0
+    e = PowerLawEnvelope()
+    e.rho_0 = 1.
+    e.rmin = 1.
+    e.r_0 = 2.
+    e.rmax = 10.
+    e.power = 0.
+    assert e.outermost_radius(2.) == 0.
+    assert e.outermost_radius(0.5) == 10
+
 
 # Ulrich Envelope
 

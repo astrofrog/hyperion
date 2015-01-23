@@ -257,7 +257,15 @@ class PowerLawEnvelope(Envelope):
         r : float
             The radius at which the density has fallen to ``rho``
         '''
-        return self.r_0 * (rho / self.rho_0) ** (1. / self.power)
+        if self.power == 0:
+            if rho >= self.rho_0:
+                return 0.
+            else:
+                if self.rmax is None:
+                    raise Exception("rmax is not set")
+                return self.rmax
+        else:
+            return self.r_0 * (rho / self.rho_0) ** (1. / self.power)
 
     def midplane_cumulative_density(self, r):
         '''
