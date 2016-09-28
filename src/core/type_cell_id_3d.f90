@@ -27,8 +27,6 @@ module type_grid_cell
      integer :: w1=0, w2=0, w3=0
   end type wall_id
 
-  type(wall_id), parameter, public :: no_wall = wall_id(0, 0, 0)
-
 contains
 
   type(wall_id) function add_wall(a,b) result(c)
