@@ -17,12 +17,7 @@ COMMON = 	fortranlib/src/base_types.f90 \
 		fortranlib/src/type_stokes.f90 \
 		fortranlib/src/type_pdf.f90
 
-OBJECTS1 = 	src/core/type_photon.f90 \
-		src/main/settings.f90 \
-		src/main/performance.f90 \
-		src/images/image_type.f90 \
-		src/dust/dust_type_4elem.f90 \
-		src/dust/dust.f90
+OBJECTS1 = 	src/core/type_photon.f90
 
 OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			fortranlib/src/@posix_module_serial@.f90 \
@@ -32,8 +27,7 @@ OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_io_nompi.f90 \
 			src/grid/type_grid_cartesian_3d.f90 \
 			src/core/type_cell_id_3d.f90 \
-			$(OBJECTS1) \
-			src/grid/grid_io.f90 \
+			src/core/type_photon.f90 \
 			src/grid/grid_geometry_cartesian_3d.f90 \
 			src/main/test.f90
 
