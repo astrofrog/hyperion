@@ -17,7 +17,7 @@ OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			fortranlib/src/type_angle3d.f90 \
 			fortranlib/src/type_vector3d.f90 \
 			fortranlib/src/type_stokes.f90 \
-			fortranlib/src/type_pdf.f90
+			fortranlib/src/type_pdf.f90 \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
 			src/grid/type_grid_cartesian_3d.f90 \
