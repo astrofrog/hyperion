@@ -7,7 +7,7 @@ module grid_geometry_specific
 
 contains
 
-  real(dp) function cell_width(cell, idir)
+  real function cell_width(cell, idir)
     implicit none
     type(grid_cell),intent(in) :: cell
     integer,intent(in) :: idir
