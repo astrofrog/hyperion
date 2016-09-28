@@ -13,18 +13,5 @@ module core_lib
   ! Basic numeric types
   use base_types
 
-  ! Maths
-  use lib_constants
-  use lib_algebra
-  use lib_statistics
-  use type_pdf
-  use type_angle3d
-  use type_vector3d
-  use type_stokes
-  use lib_array
-  use lib_random
-
-  ! External
-  use lib_hdf5
 
 end module core_lib
