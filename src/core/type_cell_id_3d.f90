@@ -63,9 +63,6 @@ contains
     implicit none
     integer,intent(in) :: i1, i2, i3
     type(grid_geometry_desc),intent(in) :: geo
-    cell%i1 = i1
-    cell%i2 = i2
-    cell%i3 = i3
     cell%ic = cell_id(i1, i2, i3, geo)
   end function new_grid_cell_3d
 
@@ -74,19 +71,6 @@ contains
     integer,intent(in) :: ic
     type(grid_geometry_desc),intent(in) :: geo
     cell%ic = ic
-    cell%i3 = ic / (geo%n1 * geo%n2)
-    cell%i2 = (ic - cell%i3 * geo%n1 * geo%n2) / geo%n1
-    cell%i1 = ic - cell%i3 * geo%n1 * geo%n2 - cell%i2 * geo%n1
-    cell%i2 = cell%i2 + 1
-    cell%i3 = cell%i3 + 1
-    if(cell%i1==0) then
-       cell%i1=geo%n1
-       cell%i2=cell%i2 - 1
-    end if
-    if(cell%i2==0) then
-       cell%i2=geo%n2
-       cell%i3=cell%i3 - 1
-    end if
   end function new_grid_cell_1d
 
   integer function cell_id(i1, i2, i3, geo)
