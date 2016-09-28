@@ -1,6 +1,5 @@
 module grid_geometry_specific
 
-  use core_lib
   use mpi_core
   use type_photon
   use type_grid_cell
@@ -10,6 +9,5 @@ module grid_geometry_specific
   save
 
   type(grid_cell) :: cell
-
 
 end module grid_geometry_specific
