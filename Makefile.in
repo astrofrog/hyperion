@@ -6,9 +6,7 @@ FCMPI = @mpi_fc@ @extra_mpi@
 OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			fortranlib/src/@posix_module_serial@.f90 \
 			fortranlib/src/base_types.f90 \
-			fortranlib/src/lib_messages.f90 \
 			fortranlib/src/lib_version.f90 \
-			fortranlib/src/lib_constants.f90 \
 			src/core/core_lib.f90 \
 			src/grid/type_grid_cartesian_3d.f90 \
 			src/core/type_cell_id_3d.f90 \
