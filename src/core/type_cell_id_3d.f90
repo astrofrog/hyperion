@@ -13,16 +13,6 @@ module type_grid_cell
 
   type(grid_cell),parameter,public :: invalid_cell = grid_cell(-1,-1,-1,-1)
 
-  public :: operator(.eq.)
-  interface operator(.eq.)
-     module procedure equal
-     module procedure equal_wall
-  end interface operator(.eq.)
-
-  public :: operator(+)
-  interface operator(+)
-     module procedure add_wall
-  end interface operator(+)
 
   public :: new_grid_cell
   interface new_grid_cell
