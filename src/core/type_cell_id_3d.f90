@@ -5,7 +5,6 @@ module type_grid_cell
   implicit none
   private
 
-  public :: cell_id
   public :: grid_cell
   type grid_cell
      integer :: i1, i2, i3, ic
@@ -23,7 +22,6 @@ module type_grid_cell
   interface operator(+)
      module procedure add_wall
   end interface operator(+)
-
 
   public :: wall_id
   type wall_id
@@ -58,21 +56,14 @@ contains
     implicit none
     integer,intent(in) :: i1, i2, i3
     type(grid_geometry_desc),intent(in) :: geo
-    cell%ic = cell_id(i1, i2, i3, geo)
+    cell%ic = 1
   end function new_grid_cell_3d
 
   type(grid_cell) function new_grid_cell_1d(ic, geo) result(cell)
     implicit none
     integer,intent(in) :: ic
     type(grid_geometry_desc),intent(in) :: geo
-    cell%ic = ic
+    cell%ic = 1
   end function new_grid_cell_1d
-
-  integer function cell_id(i1, i2, i3, geo)
-    implicit none
-    integer,intent(in) :: i1, i2, i3
-    type(grid_geometry_desc),intent(in) :: geo
-    cell_id = (i3-1)*geo%n1*geo%n2 + (i2-1)*geo%n1 + i1
-  end function cell_id
 
 end module type_grid_cell
