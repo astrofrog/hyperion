@@ -1,5 +1,3 @@
-! Verified and cleaned 13/09/08
-
 module type_photon
 
   use core_lib
@@ -12,9 +10,7 @@ module type_photon
   public :: photon
 
   type photon
-
      type(grid_cell) :: icell
-
   end type photon
 
 end module type_photon

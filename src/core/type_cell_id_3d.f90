@@ -52,18 +52,4 @@ contains
     equal = a%i1 == b%i1 .and. a%i2 == b%i2 .and. a%i3 == b%i3
   end function equal
 
-  type(grid_cell) function new_grid_cell_3d(i1, i2, i3, geo) result(cell)
-    implicit none
-    integer,intent(in) :: i1, i2, i3
-    type(grid_geometry_desc),intent(in) :: geo
-    cell%ic = 1
-  end function new_grid_cell_3d
-
-  type(grid_cell) function new_grid_cell_1d(ic, geo) result(cell)
-    implicit none
-    integer,intent(in) :: ic
-    type(grid_geometry_desc),intent(in) :: geo
-    cell%ic = 1
-  end function new_grid_cell_1d
-
 end module type_grid_cell
