@@ -17,8 +17,6 @@ module type_grid_cell
 
 contains
 
-
-
   logical function equal(a,b)
     implicit none
     type(grid_cell), intent(in) :: a,b
