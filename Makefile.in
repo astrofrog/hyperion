@@ -9,13 +9,8 @@ OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			fortranlib/src/lib_messages.f90 \
 			fortranlib/src/lib_io.f90 \
 			fortranlib/src/lib_version.f90 \
-			fortranlib/src/lib_algebra.f90 \
 			fortranlib/src/lib_conf.f90 \
-			fortranlib/src/lib_array.f90 \
-			fortranlib/src/lib_statistics.f90 \
 			fortranlib/src/lib_constants.f90 \
-			fortranlib/src/type_angle3d.f90 \
-			fortranlib/src/type_vector3d.f90 \
 			fortranlib/src/type_stokes.f90 \
 			fortranlib/src/type_pdf.f90 \
 			src/core/core_lib.f90 \
