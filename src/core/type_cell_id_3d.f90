@@ -15,12 +15,6 @@ module type_grid_cell
      module procedure equal
   end interface operator(.eq.)
 
-
-  public :: wall_id
-  type wall_id
-     integer :: w1=0
-  end type wall_id
-
 contains
 
 
