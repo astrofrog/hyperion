@@ -7,12 +7,5 @@ module type_grid
 
   private
 
-  public :: grid_geometry_desc
-  type grid_geometry_desc
-
-     character(len=32) :: id
-
-
-  end type grid_geometry_desc
 
 end module type_grid
