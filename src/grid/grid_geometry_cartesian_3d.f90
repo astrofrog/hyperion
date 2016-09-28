@@ -6,8 +6,6 @@ module grid_geometry_specific
   use type_photon
   use type_grid_cell
   use type_grid
-  use grid_io
-  use counters
 
   implicit none
   save
