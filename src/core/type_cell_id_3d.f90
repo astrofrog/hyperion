@@ -10,7 +10,7 @@ module type_grid_cell
      integer :: i1
   end type grid_cell
 
-  type(grid_cell),parameter,public :: invalid_cell = grid_cell(-1,-1,-1,-1)
+  type(grid_cell),parameter,public :: invalid_cell = grid_cell(-1)
 
   public :: operator(.eq.)
   interface operator(.eq.)
