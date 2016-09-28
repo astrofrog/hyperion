@@ -17,17 +17,26 @@ COMMON = 	fortranlib/src/base_types.f90 \
 		fortranlib/src/type_stokes.f90 \
 		fortranlib/src/type_pdf.f90
 
-OBJECTS1 = 	src/core/type_photon.f90
-
 OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			fortranlib/src/@posix_module_serial@.f90 \
-			$(COMMON) \
+			fortranlib/src/base_types.f90 \
+			fortranlib/src/lib_messages.f90 \
+			fortranlib/src/lib_io.f90 \
+			fortranlib/src/lib_version.f90 \
+			fortranlib/src/lib_algebra.f90 \
+			fortranlib/src/lib_conf.f90 \
+			fortranlib/src/lib_array.f90 \
+			fortranlib/src/lib_statistics.f90 \
+			fortranlib/src/lib_constants.f90 \
+			fortranlib/src/type_angle3d.f90 \
+			fortranlib/src/type_vector3d.f90 \
+			fortranlib/src/type_stokes.f90 \
+			fortranlib/src/type_pdf.f90
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
-			src/mpi/mpi_io_nompi.f90 \
 			src/grid/type_grid_cartesian_3d.f90 \
 			src/core/type_cell_id_3d.f90 \
-			src/core/type_photon.f90 \
+			src/core/type_photon.f90
 			src/grid/grid_geometry_cartesian_3d.f90 \
 			src/main/test.f90
 
