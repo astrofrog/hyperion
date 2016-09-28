@@ -15,10 +15,6 @@ module type_grid_cell
      module procedure equal
   end interface operator(.eq.)
 
-  public :: operator(+)
-  interface operator(+)
-     module procedure add_wall
-  end interface operator(+)
 
   public :: wall_id
   type wall_id
@@ -27,11 +23,7 @@ module type_grid_cell
 
 contains
 
-  type(wall_id) function add_wall(a,b) result(c)
-    implicit none
-    type(wall_id), intent(in) :: a,b
-    c%w1 = a%w1 + b%w1
-  end function add_wall
+
 
   logical function equal(a,b)
     implicit none
