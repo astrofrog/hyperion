@@ -9,5 +9,12 @@ module type_photon
   save
 
   private
+  public :: photon
+
+  type photon
+
+     type(grid_cell) :: icell
+
+  end type photon
 
 end module type_photon
