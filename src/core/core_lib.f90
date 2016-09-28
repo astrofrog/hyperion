@@ -5,7 +5,6 @@ module core_lib
   ! Configuration file I/O
   use lib_conf
   use lib_io
-  use lib_version
 
   ! Error/message handling
   use lib_messages
