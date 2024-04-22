@@ -236,12 +236,16 @@ static PyObject *_get_positions_widths(PyObject *self, PyObject *args)
     /* Interpret the input objects as `numpy` arrays. */
     PyObject *refined_array = PyArray_FROM_OTF(refined_obj, NPY_LONGLONG, NPY_ARRAY_IN_ARRAY);
 
+    printf("1\n");
+
     /* If that didn't work, throw an `Exception`. */
     if (refined_array == NULL) {
         PyErr_SetString(PyExc_TypeError, "Couldn't parse the input arrays.");
         Py_XDECREF(refined_array);
         return NULL;
     }
+
+    printf("2\n");
 
     /* How many cells are there? */
     int ncells = (int)PyArray_DIM(refined_array, 0);
@@ -250,6 +254,8 @@ static PyObject *_get_positions_widths(PyObject *self, PyObject *args)
 
     npy_intp dims[1];
     dims[0] = ncells;
+
+    printf("3\n");
 
     PyObject *xc_array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     if (xc_array == NULL) {
@@ -264,6 +270,9 @@ static PyObject *_get_positions_widths(PyObject *self, PyObject *args)
         Py_XDECREF(refined_array);
         return NULL;
     }
+
+    printf("4\n");
+
 
     PyObject *zc_array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     if (zc_array == NULL) {
@@ -285,6 +294,7 @@ static PyObject *_get_positions_widths(PyObject *self, PyObject *args)
         Py_XDECREF(refined_array);
         return NULL;
     }
+    printf("5\n");
 
     PyObject *zw_array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     if (zw_array == NULL) {
@@ -302,16 +312,24 @@ static PyObject *_get_positions_widths(PyObject *self, PyObject *args)
     double *yw = (double*)PyArray_DATA(yw_array);
     double *zw = (double*)PyArray_DATA(zw_array);
 
+    printf("6\n");
+
     /* Compute cell properties */
     int i;
     i = recursive_position_width(0, refined, x0, y0, z0, dx, dy, dz, xc, yc, zc, xw, yw, zw);
 
     if(i != ncells - 1) {
+        printf("HERE %d %d\n", i, ncells);
         PyErr_SetString(PyExc_TypeError, "An error occurred when retrieving the cell properties");
+        Py_XDECREF(refined_array);
+        return NULL;
     }
 
+    printf("7\n");
+
     // return xc_array, yc_array, zc_array;
-    return Py_BuildValue("OOOOOO", xc_array, yc_array, zc_array, xw_array, yw_array, zw_array);
+    // return Py_BuildValue("OOOOOO", xc_array, yc_array, zc_array, xw_array, yw_array, zw_array);
+    return Py_BuildValue("O", xc_array);
 
 }
 
@@ -330,6 +348,8 @@ int recursive_position_width(int i, long *refined,
     xw[i] = dx;
     yw[i] = dy;
     zw[i] = dz;
+
+    printf("recursive_position_width %d %d %f %f %f %f\n", i, refined[i], x, y, z, dx, dy, dz);
 
     if(refined[i] == 1) {
 

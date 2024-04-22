@@ -132,6 +132,8 @@ def compute_octree_geometry(x, y, z, dx, dy, dz, px, py, pz, sigma, mass,
     refined = refine(x, y, z, dx, dy, dz, px, py, pz, sigma,
                      mass, n_levels, stopping_criterion)
 
+    print(refined, len(refined))
+
     # Set up OctreeGrid instance
     from ..grid import OctreeGrid
     octree = OctreeGrid(x, y, z, dx, dy, dz, refined)
