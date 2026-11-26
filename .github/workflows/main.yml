@@ -16,37 +16,41 @@ jobs:
         brew:
           - hdf5-mpi
       envs: |
-        # Tests that don't rely on Fortran binaries
-        - linux: py311-test-nobinaries
-        - linux: py312-test-nobinaries
-        - linux: py313-test-nobinaries
-        - macos: py311-test-nobinaries
-        - macos: py312-test-nobinaries
-        - macos: py313-test-nobinaries
-        - windows: py311-test-nobinaries
-        - windows: py312-test-nobinaries
-        - windows: py313-test-nobinaries
+        # TEMPORARY: only the macOS job that builds the Fortran binaries
+        # (serial and MPI) is enabled, to check whether it works again.
+        - macos: py313-test-macos
 
-        # Main tests including Fortran binaries
-        - linux: py311-test
-        - linux: py312-test
-        - linux: py313-test
+        # # Tests that don't rely on Fortran binaries
+        # - linux: py311-test-nobinaries
+        # - linux: py312-test-nobinaries
+        # - linux: py313-test-nobinaries
+        # - macos: py311-test-nobinaries
+        # - macos: py312-test-nobinaries
+        # - macos: py313-test-nobinaries
+        # - windows: py311-test-nobinaries
+        # - windows: py312-test-nobinaries
+        # - windows: py313-test-nobinaries
+        #
+        # # Main tests including Fortran binaries
+        # - linux: py311-test
+        # - linux: py312-test
+        # - linux: py313-test
+        #
+        # # Bit-level tests
+        # - linux: py311-test-bitlevel
+        #   runs-on: ubuntu-24.04
+        # - linux: py312-test-bitlevel
+        #   runs-on: ubuntu-24.04
 
-        # Bit-level tests
-        - linux: py311-test-bitlevel
-          runs-on: ubuntu-24.04
-        - linux: py312-test-bitlevel
-          runs-on: ubuntu-24.04
-
-
-  publish:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
-    with:
-      test_extras: test
-      test_command: pytest --pyargs hyperion -m "not requires_hyperion_binaries"
-      targets: |
-        - linux
-        - macos
-        - windows
-    secrets:
-      pypi_token: ${{ secrets.pypi_token }}
+  # TEMPORARY: publishing disabled while testing the macOS job
+#   publish:
+#     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
+#     with:
+#       test_extras: test
+#       test_command: pytest --pyargs hyperion -m "not requires_hyperion_binaries"
+#       targets: |
+#         - linux
+#         - macos
+#         - windows
+#     secrets:
+#       pypi_token: ${{ secrets.pypi_token }}
