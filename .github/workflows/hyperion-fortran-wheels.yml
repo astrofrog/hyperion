@@ -66,13 +66,20 @@ jobs:
 
       # cibuildwheel passes the environment of the runner through to the
       # build on macOS, so this makes the HDF5 compiler wrapper (h5fc) from
-      # conda-forge, and the gfortran it should use, available to configure
+      # conda-forge, and the gfortran it should use, available to configure.
+      # Only h5fc is put on the PATH, since the environment also contains
+      # tools such as a linker (ld) that would otherwise be used instead of
+      # the system ones when building other packages, such as hyperion itself
+      # in the test step.
       - name: Use gfortran and HDF5 from conda-forge
         if: runner.os == 'macOS'
         run: |
           prefix="$MAMBA_ROOT_PREFIX/envs/fortran"
           test -x "$prefix/bin/h5fc" && test -x "$prefix/bin/gfortran"
-          echo "$prefix/bin" >> "$GITHUB_PATH"
+          mkdir -p "$RUNNER_TEMP/h5fc-bin"
+          printf '#!/bin/sh\nexec "%s/bin/h5fc" "$@"\n' "$prefix" > "$RUNNER_TEMP/h5fc-bin/h5fc"
+          chmod +x "$RUNNER_TEMP/h5fc-bin/h5fc"
+          echo "$RUNNER_TEMP/h5fc-bin" >> "$GITHUB_PATH"
           {
             echo "FORTRAN_PREFIX=$prefix"
             echo "HDF5_FC=$prefix/bin/gfortran"
