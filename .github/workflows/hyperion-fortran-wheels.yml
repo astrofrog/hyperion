@@ -49,6 +49,13 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      # Homebrew packages are built for the version of macOS of the runner, so
+      # the wheel has to target that version too (cibuildwheel passes the
+      # variable through to the build on macOS)
+      - name: Set the macOS deployment target
+        if: runner.os == 'macOS'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d. -f1).0" >> "$GITHUB_ENV"
+
       - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e  # v4.3.5
         with:
           package-dir: packaging/hyperion-fortran
@@ -64,9 +71,6 @@ jobs:
           # h5fc wrapper from EPEL uses compiler settings from redhat-rpm-config)
           CIBW_BEFORE_ALL_LINUX: dnf install -y epel-release && dnf install -y hdf5-devel redhat-rpm-config
           CIBW_BEFORE_ALL_MACOS: brew install hdf5
-          # Homebrew packages are built for the version of macOS of the runner,
-          # so the wheel has to target that version too
-          CIBW_ENVIRONMENT_MACOS: HYPERION_FORTRAN_MPI=1 MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d. -f1).0
           # The MPI library is not bundled, since it comes from the mpich
           # package installed with the hyperion-fortran[mpi] extra
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair --exclude libmpi_abi.so.1 -w {dest_dir} {wheel}
