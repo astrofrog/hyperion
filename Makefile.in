@@ -8,7 +8,10 @@ FC = @serial_fc@ @extra_serial@
 MPICC = @MPICC@
 MPI_CFLAGS = @MPI_CFLAGS@
 MPI_LIBS = @MPI_LIBS@
-MPI_C = $(MPICC) $(MPI_CFLAGS) -O2 -c ../../src/mpi/mpi_c.c -o mpi_c_layer.o
+# The C layer is compiled as position-independent code, since some Fortran
+# compilers (e.g. the HDF5 compiler wrappers on Red Hat based systems) link
+# position-independent executables
+MPI_C = $(MPICC) $(MPI_CFLAGS) -O2 -fPIC -c ../../src/mpi/mpi_c.c -o mpi_c_layer.o
 
 COMMON = 	fortranlib/src/base_types.f90 \
 		fortranlib/src/lib_messages.f90 \
