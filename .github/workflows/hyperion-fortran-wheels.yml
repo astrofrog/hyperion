@@ -133,12 +133,13 @@ jobs:
 
   # The wheels are tested on the runner they are built on as part of the
   # build. Also check that the macOS wheel works on the oldest version of
-  # macOS available on GitHub Actions (since it is built for older versions
-  # of macOS than the build runner).
+  # macOS available on GitHub Actions (macOS 15 on Apple Silicon at the time
+  # of writing), since it is built for older versions of macOS than the
+  # build runner.
   test-older-macos:
-    name: test on macos-14
+    name: test on macos-15
     needs: build
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
