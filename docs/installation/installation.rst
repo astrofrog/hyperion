@@ -50,6 +50,25 @@ is not included in the above::
 
     pip install hyperion-dust
 
+Installing with pip
+===================
+
+Hyperion can also be installed with ``pip``, together with pre-compiled
+Fortran binaries (provided by the ``hyperion-fortran`` package) for Linux
+(x86_64) and MacOS X (Apple Silicon)::
+
+    pip install "hyperion[fortran]"
+
+To also install the parallel (MPI) versions of the binaries, along with an
+MPI library (MPICH, from the ``mpich`` package)::
+
+    pip install "hyperion[mpi]"
+
+These binaries are intended for running models on a single computer. On
+clusters, you should normally compile the Fortran code yourself against the
+MPI library provided on the cluster, as described below, and not install the
+``hyperion-fortran`` package (see :ref:`which_binaries`).
+
 The longer way
 ==============
 
@@ -66,8 +85,10 @@ The packages required for the Fortran part of Hyperion are:
 
 * `HDF5 <http://www.hdfgroup.org/HDF5/>`_ 1.8.x or 1.10.x with the Fortran bindings
 
-* An MPI installation (e.g. `MPICH2 <http://www.mpich.org/>`_ or `OpenMPI
-  <http://www.open-mpi.org/>`_) with the Fortran bindings
+* An MPI installation (e.g. `MPICH <http://www.mpich.org/>`_ or `OpenMPI
+  <http://www.open-mpi.org/>`_), with its C compiler wrapper (``mpicc``). The
+  Fortran bindings of MPI are not needed, since the Fortran code calls MPI
+  through a small C layer.
 
 Note that in some cases, default installations of HDF5 and MPI packages do not
 include support for Fortran - this has to be explicitly enabled.
@@ -192,6 +213,17 @@ If you are using HDF5 1.8.x, compile the Fortran code with::
 The different binaries can be compiled in parallel by passing e.g. ``-j 4`` to
 ``make``.
 
+The MPI versions of the binaries are compiled using ``mpicc`` for the C layer
+that calls MPI. A different MPI C compiler wrapper can be given with the
+``MPICC`` variable, and if needed the flags used to link to the MPI library
+with ``MPI_LIBS``, for example::
+
+    ./configure MPICC=/path/to/mpicc
+
+With ``--enable-mpi-abi``, the MPI code is instead compiled for the MPI-5
+standard ABI (``libmpi_abi``, using ``mpicc_abi`` by default), so that the
+binaries can be used with any MPI library that implements this ABI.
+
 By default, the binaries will be written to ``/usr/local/bin`` (which will
 require you to use ``sudo`` for the last command). If you would prefer to
 install to your home directory, you can change this using the ``--prefix``
@@ -211,3 +243,33 @@ If you get::
 
 then something went wrong in the installation, or the directory to which you
 installed the binaries is not in your ``$PATH``. Otherwise, you are all set!
+
+.. _which_binaries:
+
+Which binaries are used
+=======================
+
+When running a model, Hyperion looks for the Fortran binaries in the following
+places, and uses the first ones that it finds:
+
+1. The directory given by the ``HYPERION_BIN_DIR`` environment variable, or
+   by the ``dir`` option in the ``[binaries]`` section of the
+   ``~/.hyperionrc`` file, if either is set::
+
+       [binaries]
+       dir = /path/to/hyperion/bin
+
+2. The ``hyperion-fortran`` package, if it is installed (see
+   `Installing with pip`_). These binaries always match the version of the
+   Python library.
+
+3. The directories in your ``$PATH``, which is where binaries compiled from
+   source are installed.
+
+The ``hyperion`` command prints which binary is run, and where it was found.
+To use binaries that you compiled yourself when the ``hyperion-fortran``
+package is installed, set ``HYPERION_BIN_DIR`` (or uninstall the
+``hyperion-fortran`` package). The MPI binaries from the ``hyperion-fortran``
+package are always run with the ``mpiexec`` from the ``mpich`` package,
+whereas for other binaries the launcher can be set with the ``command`` option
+in the ``[mpi]`` section of ``~/.hyperionrc`` (see :doc:`../running/running`).
