@@ -61,12 +61,18 @@ jobs:
           package-dir: packaging/hyperion-fortran
         env:
           # One build per platform, since the wheel does not depend on Python
-          CIBW_BUILD: cp312-*
+          # (and only glibc-based Linux, since HDF5 comes from EPEL)
+          CIBW_BUILD: cp312-manylinux_* cp312-macosx_*
           CIBW_ARCHS_LINUX: x86_64
           CIBW_ARCHS_MACOS: arm64
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           # Build the MPI binaries too, against the mpich package from PyPI
           CIBW_ENVIRONMENT: HYPERION_FORTRAN_MPI=1
+          # The HDF5 Fortran modules from EPEL can only be used by the system
+          # gfortran they were compiled with (and h5fc adds options for the
+          # system compiler's plugins), rather than by the newer gfortran
+          # that is first on the PATH in the manylinux images
+          CIBW_ENVIRONMENT_LINUX: HYPERION_FORTRAN_MPI=1 HDF5_FC=/usr/bin/gfortran HDF5_FLINKER=/usr/bin/gfortran
           # HDF5 with Fortran support from the system package managers (the
           # h5fc wrapper from EPEL uses compiler settings from redhat-rpm-config)
           CIBW_BEFORE_ALL_LINUX: dnf install -y epel-release && dnf install -y hdf5-devel redhat-rpm-config
