@@ -34,7 +34,10 @@ class BuildBinaries(build_py):
             configure += ['--enable-mpi-abi', 'MPICC=' + os.path.join(sys.prefix, 'bin', 'mpicc_abi')]
             targets.append('mpi')
         subprocess.check_call(configure, cwd=ROOT)
-        subprocess.check_call(['make', '-j4', *targets], cwd=ROOT)
+        # Always rebuild everything (-B), since binaries left over from a build
+        # with different configure options (e.g. another MPI library) would
+        # otherwise be considered up to date
+        subprocess.check_call(['make', '-B', '-j4', *targets], cwd=ROOT)
         target_dir = os.path.join(self.build_lib, 'hyperion_fortran', 'bin')
         os.makedirs(target_dir, exist_ok=True)
         for name in sorted(os.listdir(os.path.join(ROOT, 'bin'))):
