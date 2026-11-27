@@ -6,7 +6,8 @@ The binaries are looked for, in order:
 1. In the directory given by the ``HYPERION_BIN_DIR`` environment variable,
    or by the ``dir`` option in the ``[binaries]`` section of
    ``~/.hyperionrc``, if either is set.
-2. In the ``hyperion-fortran`` package, if it is installed.
+2. In the ``hyperion-fortran`` package, if it is installed (e.g. with
+   ``pip install hyperion[fortran]``).
 3. On the ``PATH``, which is where binaries compiled from source are
    installed.
 
@@ -87,7 +88,9 @@ def find_binary(name):
     if path is not None:
         return path, 'path'
 
-    raise FileNotFoundError(f"Could not find the Hyperion binary {name} - see the "
+    raise FileNotFoundError(f"Could not find the Hyperion binary {name} - either "
+                            "install the pre-compiled binaries with "
+                            "'pip install hyperion[fortran]', or see the "
                             "installation instructions for how to compile and "
                             "install the Fortran code")
 

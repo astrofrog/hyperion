@@ -37,6 +37,7 @@ def fake_package(monkeypatch, bin_dir, launcher='mpiexec-from-package'):
 def test_not_found(isolated):
     with pytest.raises(FileNotFoundError) as exc:
         find_binary('hyperion_sph')
+    assert "pip install hyperion[fortran]" in exc.value.args[0]
     assert "installation instructions" in exc.value.args[0]
 
 

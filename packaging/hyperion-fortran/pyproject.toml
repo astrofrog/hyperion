@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "setuptools_scm>=8",
+    "wheel",
+    # Only needed when building the MPI binaries (HYPERION_FORTRAN_MPI=1)
+    "mpich>=5; sys_platform != 'win32'",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyperion-fortran"
+dynamic = ["version", "dependencies"]
+description = "Compiled Fortran binaries for the Hyperion radiative transfer code"
+readme = "README.md"
+license = "BSD-2-Clause"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+# MPI binaries linked against the MPI library from the mpich package
+mpi = ["mpich>=5"]
+
+[tool.setuptools]
+packages = ["hyperion_fortran"]
+
+[tool.setuptools_scm]
+# The version is taken from the Hyperion repository, so that the binaries
+# and the Python package are released with the same version
+root = "../.."
