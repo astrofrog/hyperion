@@ -41,8 +41,11 @@ class BuildBinaries(build_py):
         target_dir = os.path.join(self.build_lib, 'hyperion_fortran', 'bin')
         os.makedirs(target_dir, exist_ok=True)
         for name in sorted(os.listdir(os.path.join(ROOT, 'bin'))):
-            if name.startswith('hyperion_'):
-                shutil.copy2(os.path.join(ROOT, 'bin', name), target_dir)
+            path = os.path.join(ROOT, 'bin', name)
+            # Only copy the binaries themselves, not e.g. the .dSYM debug
+            # symbol directories that the compilers create on macOS
+            if name.startswith('hyperion_') and os.path.isfile(path):
+                shutil.copy2(path, target_dir)
 
 
 class BinaryDistribution(Distribution):
