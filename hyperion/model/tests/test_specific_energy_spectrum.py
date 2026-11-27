@@ -1,5 +1,4 @@
 
-import shutil
 
 import numpy as np
 import pytest
@@ -9,7 +8,7 @@ import h5py
 from .. import Model
 from ...grid import AMRGrid
 from ...util.functions import random_id
-from .test_helpers import get_test_dust, get_realistic_test_dust
+from .test_helpers import get_test_dust, get_realistic_test_dust, skip_unless_mpi
 
 
 def _read_dataset(filename, suffix):
@@ -377,10 +376,7 @@ def test_specific_energy_spectrum_mpi_matches_serial(tmpdir):
     # between a serial run and a 2-process MPI run. This is skipped unless both an
     # MPI launcher and the MPI build of the binary are available (e.g. CI only
     # builds the serial binaries).
-    if shutil.which('mpirun') is None and shutil.which('mpiexec') is None:
-        pytest.skip("no MPI launcher available")
-    if shutil.which('hyperion_car_mpi') is None:
-        pytest.skip("MPI build of the Hyperion binaries not available")
+    skip_unless_mpi('hyperion_car_mpi')
 
     m = _cartesian_model('last', n_photons=200000)
     m.write(tmpdir.join(random_id()).strpath)

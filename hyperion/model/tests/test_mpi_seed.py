@@ -1,10 +1,9 @@
-import shutil
 
 import numpy as np
 import pytest
 
 from .. import Model
-from .test_helpers import random_id
+from .test_helpers import random_id, skip_unless_mpi
 from ...dust import IsotropicDust
 
 
@@ -47,10 +46,7 @@ def test_mpi_small_seed(tmpdir, monkeypatch):
     # -1 (since the absolute value of the seed is used). The scattered flux
     # was then wrong. This should now agree with a serial run.
 
-    if shutil.which('mpirun') is None and shutil.which('mpiexec') is None:
-        pytest.skip("no MPI launcher available")
-    if shutil.which('hyperion_sph_mpi') is None:
-        pytest.skip("MPI build of the Hyperion binaries not available")
+    skip_unless_mpi('hyperion_sph_mpi')
 
     # The test needs four processes, which can be more than the number of
     # cores, so allow Open MPI to oversubscribe (the variables are for Open MPI

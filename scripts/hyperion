@@ -4,7 +4,6 @@ import sys
 import subprocess
 import os
 
-from configparser import ConfigParser
 
 if (sys.version_info[0] == 2 and sys.version_info[1] < 7) or \
    (sys.version_info[0] == 3 and sys.version_info[1] <= 1):
@@ -64,36 +63,20 @@ else:
 
 
 # Determine binary command
+from hyperion.util.binaries import find_binary, find_mpi_launcher
+
 if n_cores is None:
-    command = 'hyperion_' + suffix
+    binary, source = find_binary('hyperion_' + suffix)
+    command = binary
 else:
+    binary, source = find_binary('hyperion_' + suffix + '_mpi')
+    mpi_command = find_mpi_launcher(source)
+    command = '{0} -n {1} {2}'.format(mpi_command, n_cores, binary)
 
-    filename = os.path.expanduser('~/.hyperionrc')
-    config = ConfigParser()
-    config.read(filename)
-
-    if config.has_option('mpi', 'command'):
-
-        mpi_command = config.get('mpi', 'command')
-
-    else:
-
-        mpi_command = None
-
-        # Check whether mpirun or mpiexec are available
-        for dir in os.environ['PATH'].split(':'):
-            if os.path.exists(os.path.join(dir, 'mpirun')):
-                mpi_command = 'mpirun'
-                break
-            if os.path.exists(os.path.join(dir, 'mpiexec')):
-                mpi_command = 'mpiexec'
-                break
-
-        if mpi_command is None:
-            raise Exception("Cannot find mpirun or mpiexec")
-
-    command = '{0} -n {1} hyperion_{2}_mpi'.format(mpi_command,
-                                                   n_cores, suffix)
+print("Running {0} (found {1})".format(command, {'explicit': 'in HYPERION_BIN_DIR or ~/.hyperionrc',
+                                                 'path': 'on the PATH',
+                                                 'package': 'in the hyperion-fortran package'}[source]))
+sys.stdout.flush()
 
 returncode = subprocess.call('{0}{1}{2}{3} {4}'.format(command, " -f" if force_overwrite else "", " -d " if debug else " ", input, output), shell=True)
 

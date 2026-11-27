@@ -142,3 +142,20 @@ def assert_identical_results(file1, file2):
         for a in attr1:
             if a not in EXCLUDE_ATTR:
                 assert np.all(f1[item].attrs[a] == f2[item].attrs[a])
+
+
+def skip_unless_mpi(binary):
+    """
+    Skip the current test unless the given MPI binary and a launcher to run
+    it with can be found, in the same way as when running models.
+    """
+    import pytest
+    from ...util.binaries import find_binary, find_mpi_launcher
+    try:
+        _, source = find_binary(binary)
+    except FileNotFoundError:
+        pytest.skip("MPI build of the Hyperion binaries not available")
+    try:
+        find_mpi_launcher(source)
+    except FileNotFoundError:
+        pytest.skip("no MPI launcher available")
