@@ -77,10 +77,13 @@ jobs:
           # h5fc wrapper from EPEL uses compiler settings from redhat-rpm-config)
           CIBW_BEFORE_ALL_LINUX: dnf install -y epel-release && dnf install -y hdf5-devel redhat-rpm-config
           CIBW_BEFORE_ALL_MACOS: brew install hdf5
-          # The MPI library is not bundled, since it comes from the mpich
-          # package installed with the hyperion-fortran[mpi] extra
+          # The MPI libraries are not bundled, since they come from the mpich
+          # package installed with the hyperion-fortran[mpi] extra (and are
+          # found at run time through the launcher). On macOS, delocate also
+          # has to be told not to look for them, since the rpath they were
+          # linked with points to the temporary build environment.
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair --exclude libmpi_abi.so.1 -w {dest_dir} {wheel}
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel --require-archs {delocate_archs} --exclude libmpi_abi -w {dest_dir} -v {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel --require-archs {delocate_archs} --exclude libmpi_abi --exclude libpmpi_abi --ignore-missing-dependencies -w {dest_dir} -v {wheel}
           # hyperion-fortran requires the matching version of hyperion, which
           # is installed from the same commit before installing the wheel
           CIBW_BEFORE_TEST: pip install {project}
