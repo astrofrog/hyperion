@@ -65,25 +65,17 @@ jobs:
           init-shell: none
 
       # cibuildwheel passes the environment of the runner through to the
-      # build on macOS, so this makes the HDF5 compiler wrapper (h5fc) from
-      # conda-forge, and the gfortran it should use, available to configure.
-      # Only h5fc is put on the PATH, since the environment also contains
-      # tools such as a linker (ld) that would otherwise be used instead of
-      # the system ones when building other packages, such as hyperion itself
-      # in the test step.
+      # build on macOS, so this makes the conda-forge HDF5 compiler wrapper
+      # (h5fc) available to configure, along with the gfortran and other
+      # tools that h5fc calls by name
       - name: Use gfortran and HDF5 from conda-forge
         if: runner.os == 'macOS'
         run: |
           prefix="$MAMBA_ROOT_PREFIX/envs/fortran"
-          test -x "$prefix/bin/h5fc" && test -x "$prefix/bin/gfortran"
-          mkdir -p "$RUNNER_TEMP/h5fc-bin"
-          printf '#!/bin/sh\nexec "%s/bin/h5fc" "$@"\n' "$prefix" > "$RUNNER_TEMP/h5fc-bin/h5fc"
-          chmod +x "$RUNNER_TEMP/h5fc-bin/h5fc"
-          echo "$RUNNER_TEMP/h5fc-bin" >> "$GITHUB_PATH"
+          test -x "$prefix/bin/h5fc"
+          echo "$prefix/bin" >> "$GITHUB_PATH"
           {
             echo "FORTRAN_PREFIX=$prefix"
-            echo "HDF5_FC=$prefix/bin/gfortran"
-            echo "HDF5_FLINKER=$prefix/bin/gfortran"
             echo "SDKROOT=$(xcrun --show-sdk-path)"
           } >> "$GITHUB_ENV"
 
@@ -125,8 +117,12 @@ jobs:
             --exclude libmpi_abi --exclude libpmpi_abi --ignore-missing-dependencies
             -w {dest_dir} -v {wheel}
           # hyperion-fortran requires the matching version of hyperion, which
-          # is installed from the same commit before installing the wheel
+          # is installed from the same commit before installing the wheel. On
+          # macOS, the system tools are put first on the PATH for this, since
+          # the C extensions of hyperion would otherwise be linked with the
+          # conda-forge linker, which does not work with the system compiler.
           CIBW_BEFORE_TEST: pip install {project}
+          CIBW_BEFORE_TEST_MACOS: PATH="/usr/bin:$PATH" pip install {project}
           CIBW_TEST_EXTRAS: mpi
           CIBW_TEST_COMMAND: python {project}/packaging/check_hyperion_fortran_wheel.py
 
