@@ -5,17 +5,23 @@ name: hyperion-fortran wheels
 # on the version of Python, so a single wheel (tagged py3-none-<platform>) is
 # built for each platform.
 
+# Pushes to branches and pull requests only trigger a build if the files that
+# affect the wheels change (the paths filter does not apply to tags).
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*'
-  pull_request:
-    paths:
+    paths: &wheel-paths
       - 'packaging/**'
       - 'src/**'
+      - 'fortranlib'
       - 'configure*'
       - 'Makefile.in'
       - '.github/workflows/hyperion-fortran-wheels.yml'
+  pull_request:
+    paths: *wheel-paths
   workflow_dispatch:
 
 permissions:
