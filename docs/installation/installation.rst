@@ -55,7 +55,7 @@ Installing with pip
 
 Hyperion can also be installed with ``pip``, together with pre-compiled
 Fortran binaries (provided by the ``hyperion-fortran`` package) for Linux
-(x86_64) and MacOS X (Apple Silicon)::
+(x86_64) and macOS 11 or later (Apple Silicon)::
 
     pip install "hyperion[fortran]"
 

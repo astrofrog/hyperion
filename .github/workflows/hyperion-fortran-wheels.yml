@@ -49,12 +49,36 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      # Homebrew packages are built for the version of macOS of the runner, so
-      # the wheel has to target that version too (cibuildwheel passes the
-      # variable through to the build on macOS)
-      - name: Set the macOS deployment target
+      # On macOS, gfortran and HDF5 come from conda-forge rather than
+      # Homebrew, since conda-forge builds them for macOS 11 (the first
+      # version of macOS for Apple Silicon), whereas Homebrew builds them for
+      # the version of macOS of the runner, which would limit the wheels to
+      # that version and later.
+      - uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39  # v3.2.1
         if: runner.os == 'macOS'
-        run: echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d. -f1).0" >> "$GITHUB_ENV"
+        with:
+          environment-name: fortran
+          create-args: gfortran hdf5=*=nompi_*
+          condarc: |
+            channels:
+              - conda-forge
+          init-shell: none
+
+      # cibuildwheel passes the environment of the runner through to the
+      # build on macOS, so this makes the HDF5 compiler wrapper (h5fc) from
+      # conda-forge, and the gfortran it should use, available to configure
+      - name: Use gfortran and HDF5 from conda-forge
+        if: runner.os == 'macOS'
+        run: |
+          prefix="$MAMBA_ROOT_PREFIX/envs/fortran"
+          test -x "$prefix/bin/h5fc" && test -x "$prefix/bin/gfortran"
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+          {
+            echo "FORTRAN_PREFIX=$prefix"
+            echo "HDF5_FC=$prefix/bin/gfortran"
+            echo "HDF5_FLINKER=$prefix/bin/gfortran"
+            echo "SDKROOT=$(xcrun --show-sdk-path)"
+          } >> "$GITHUB_ENV"
 
       - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e  # v4.3.5
         with:
@@ -66,6 +90,8 @@ jobs:
           CIBW_ARCHS_LINUX: x86_64
           CIBW_ARCHS_MACOS: arm64
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          # Build for every version of macOS that runs on Apple Silicon
+          MACOSX_DEPLOYMENT_TARGET: '11.0'
           # Build the MPI binaries too, against the mpich package from PyPI
           CIBW_ENVIRONMENT: HYPERION_FORTRAN_MPI=1
           # The HDF5 Fortran modules from EPEL can only be used by the system
@@ -73,17 +99,24 @@ jobs:
           # system compiler's plugins), rather than by the newer gfortran
           # that is first on the PATH in the manylinux images
           CIBW_ENVIRONMENT_LINUX: HYPERION_FORTRAN_MPI=1 HDF5_FC=/usr/bin/gfortran HDF5_FLINKER=/usr/bin/gfortran
-          # HDF5 with Fortran support from the system package managers (the
-          # h5fc wrapper from EPEL uses compiler settings from redhat-rpm-config)
+          # HDF5 with Fortran support from EPEL on Linux (the h5fc wrapper
+          # from EPEL uses compiler settings from redhat-rpm-config)
           CIBW_BEFORE_ALL_LINUX: dnf install -y epel-release && dnf install -y hdf5-devel redhat-rpm-config
-          CIBW_BEFORE_ALL_MACOS: brew install hdf5
           # The MPI libraries are not bundled, since they come from the mpich
           # package installed with the hyperion-fortran[mpi] extra (and are
           # found at run time through the launcher). On macOS, delocate also
           # has to be told not to look for them, since the rpath they were
-          # linked with points to the temporary build environment.
+          # linked with points to the temporary build environment. delocate
+          # finds the conda-forge libraries through DYLD_FALLBACK_LIBRARY_PATH,
+          # and fails rather than raise the macOS version that the wheel
+          # requires if any library needs a newer version of macOS than 11.0.
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair --exclude libmpi_abi.so.1 -w {dest_dir} {wheel}
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel --require-archs {delocate_archs} --exclude libmpi_abi --exclude libpmpi_abi --ignore-missing-dependencies -w {dest_dir} -v {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >-
+            DYLD_FALLBACK_LIBRARY_PATH="$FORTRAN_PREFIX/lib"
+            delocate-wheel --require-archs {delocate_archs}
+            --require-target-macos-version 11.0
+            --exclude libmpi_abi --exclude libpmpi_abi --ignore-missing-dependencies
+            -w {dest_dir} -v {wheel}
           # hyperion-fortran requires the matching version of hyperion, which
           # is installed from the same commit before installing the wheel
           CIBW_BEFORE_TEST: pip install {project}
@@ -94,3 +127,35 @@ jobs:
         with:
           name: hyperion-fortran-${{ matrix.os }}
           path: ./wheelhouse/*.whl
+
+  # The wheels are tested on the runner they are built on as part of the
+  # build. Also check that the macOS wheel works on the oldest version of
+  # macOS available on GitHub Actions (since it is built for older versions
+  # of macOS than the build runner).
+  test-older-macos:
+    name: test on macos-14
+    needs: build
+    runs-on: macos-14
+    steps:
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: '3.12'
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: hyperion-fortran-macos-latest
+          path: wheelhouse
+
+      - name: Install hyperion and the hyperion-fortran wheel
+        run: |
+          python -m pip install .
+          python -m pip install "$(ls wheelhouse/*.whl)[mpi]"
+
+      - name: Check the binaries
+        working-directory: ${{ runner.temp }}
+        run: python "$GITHUB_WORKSPACE/packaging/check_hyperion_fortran_wheel.py"
