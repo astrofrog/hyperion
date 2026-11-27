@@ -1,0 +1,69 @@
+name: hyperion-fortran wheels
+
+# Build wheels of the hyperion-fortran package, which contain the compiled
+# serial and MPI binaries, and check that they run. The binaries do not depend
+# on the version of Python, so a single wheel (tagged py3-none-<platform>) is
+# built for each platform.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - 'src/**'
+      - 'configure*'
+      - 'Makefile.in'
+      - '.github/workflows/hyperion-fortran-wheels.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    steps:
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          # The full history and tags are needed to determine the version
+          fetch-depth: 0
+          submodules: true
+
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e  # v4.3.5
+        with:
+          package-dir: packaging/hyperion-fortran
+        env:
+          # One build per platform, since the wheel does not depend on Python
+          CIBW_BUILD: cp312-*
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_MACOS: arm64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          # Build the MPI binaries too, against the mpich package from PyPI
+          CIBW_ENVIRONMENT: HYPERION_FORTRAN_MPI=1
+          # HDF5 with Fortran support from the system package managers
+          CIBW_BEFORE_ALL_LINUX: dnf install -y epel-release && dnf install -y hdf5-devel
+          CIBW_BEFORE_ALL_MACOS: brew install hdf5
+          # Homebrew packages are built for the version of macOS of the runner
+          CIBW_ENVIRONMENT_MACOS: HYPERION_FORTRAN_MPI=1 MACOSX_DEPLOYMENT_TARGET=14.0
+          # The MPI library is not bundled, since it comes from the mpich
+          # package installed with the hyperion-fortran[mpi] extra
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair --exclude libmpi_abi.so.1 -w {dest_dir} {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel --require-archs {delocate_archs} --exclude libmpi_abi -w {dest_dir} -v {wheel}
+          # hyperion-fortran requires the matching version of hyperion, which
+          # is installed from the same commit before installing the wheel
+          CIBW_BEFORE_TEST: pip install {project}
+          CIBW_TEST_EXTRAS: mpi
+          CIBW_TEST_COMMAND: python {project}/packaging/check_hyperion_fortran_wheel.py
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: hyperion-fortran-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
