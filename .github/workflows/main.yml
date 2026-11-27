@@ -1,8 +1,8 @@
 name: Continuous Integration
 
+# TEMPORARY: only run manually, while testing the hyperion-fortran wheel builds
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
 
