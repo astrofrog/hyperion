@@ -1,8 +1,7 @@
 module mpi_hdf5_io
 
   use core_lib
-  use mpi
-  use mpi_interfaces
+  use mpi_c
   use mpi_core
 
   implicit none

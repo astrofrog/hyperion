@@ -1,5 +1,14 @@
 FC = @serial_fc@ @extra_serial@
-FCMPI = @mpi_fc@ @extra_mpi@
+
+# The MPI code is compiled with the serial Fortran compiler, plus a C layer
+# around MPI that is compiled with the MPI C compiler and linked to the MPI C
+# library (see configure.ac). The object file of the C layer is not called
+# mpi_c.o since the Fortran compiler wrapper writes the object file of
+# mpi_c.f90 to that name in the same directory.
+MPICC = @MPICC@
+MPI_CFLAGS = @MPI_CFLAGS@
+MPI_LIBS = @MPI_LIBS@
+MPI_C = $(MPICC) $(MPI_CFLAGS) -O2 -c ../../src/mpi/mpi_c.c -o mpi_c_layer.o
 
 COMMON = 	fortranlib/src/base_types.f90 \
 		fortranlib/src/lib_messages.f90 \
@@ -62,9 +71,9 @@ OBJECTS_CAR_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_CAR_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_CAR_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
@@ -97,9 +106,9 @@ OBJECTS_AMR_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_AMR_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_AMR_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
@@ -132,9 +141,9 @@ OBJECTS_OCT_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_OCT_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_OCT_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
@@ -168,9 +177,9 @@ OBJECTS_VOR_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_VOR_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_VOR_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/extern/kdtree2/kdtree2.f90 \
 			src/core/core_lib.f90 \
@@ -204,9 +213,9 @@ OBJECTS_SPH_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_SPH_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_SPH_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
@@ -239,9 +248,9 @@ OBJECTS_CYL_SER =	src/mpi/mpi_core_nompi.f90 \
 			src/mpi/mpi_routines_nompi.f90 \
 			$(OBJECTS3)
 
-OBJECTS_CYL_MPI =	src/mpi/@mpi_interfaces@.f90 \
+OBJECTS_CYL_MPI =	src/mpi/mpi_c.f90 \
 			src/mpi/mpi_core.f90 \
-			fortranlib/src/@posix_module_mpi@.f90 \
+			fortranlib/src/@posix_module_serial@.f90 \
 			$(COMMON) \
 			src/core/core_lib.f90 \
 			src/main/counters.f90 \
@@ -266,38 +275,38 @@ mpi:		car_mpi sph_mpi cyl_mpi oct_mpi amr_mpi vor_mpi
 car_serial:	$(OBJECTS_CAR_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_CAR_SER)) -o ../../bin/hyperion_car
 
-car_mpi:	$(OBJECTS_CAR_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_CAR_MPI)) -o ../../bin/hyperion_car_mpi
+car_mpi:	$(OBJECTS_CAR_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_CAR_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_car_mpi
 
 oct_serial:	$(OBJECTS_OCT_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_OCT_SER)) -o ../../bin/hyperion_oct
 
-oct_mpi:	$(OBJECTS_OCT_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_OCT_MPI)) -o ../../bin/hyperion_oct_mpi
+oct_mpi:	$(OBJECTS_OCT_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_OCT_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_oct_mpi
 
 amr_serial:	$(OBJECTS_AMR_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_AMR_SER)) -o ../../bin/hyperion_amr
 
-amr_mpi:	$(OBJECTS_AMR_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_AMR_MPI)) -o ../../bin/hyperion_amr_mpi
+amr_mpi:	$(OBJECTS_AMR_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_AMR_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_amr_mpi
 
 sph_serial:	$(OBJECTS_SPH_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_SPH_SER)) -o ../../bin/hyperion_sph
 
-sph_mpi:	$(OBJECTS_SPH_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_SPH_MPI)) -o ../../bin/hyperion_sph_mpi
+sph_mpi:	$(OBJECTS_SPH_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_SPH_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_sph_mpi
 
 cyl_serial:	$(OBJECTS_CYL_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_CYL_SER)) -o ../../bin/hyperion_cyl
 
-cyl_mpi:	$(OBJECTS_CYL_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_CYL_MPI)) -o ../../bin/hyperion_cyl_mpi
+cyl_mpi:	$(OBJECTS_CYL_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_CYL_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_cyl_mpi
 
 vor_serial:	$(OBJECTS_VOR_SER)
 		mkdir -p build/$@/src/modules && cd build/$@ && $(FC) $(addprefix ../../,$(OBJECTS_VOR_SER)) -o ../../bin/hyperion_vor
 
-vor_mpi:	$(OBJECTS_VOR_MPI)
-		mkdir -p build/$@/src/modules && cd build/$@ && $(FCMPI) $(addprefix ../../,$(OBJECTS_VOR_MPI)) -o ../../bin/hyperion_vor_mpi
+vor_mpi:	$(OBJECTS_VOR_MPI) src/mpi/mpi_c.c
+		mkdir -p build/$@/src/modules && cd build/$@ && $(MPI_C) && $(FC) $(addprefix ../../,$(OBJECTS_VOR_MPI)) mpi_c_layer.o $(MPI_LIBS) -o ../../bin/hyperion_vor_mpi
 
 install:	bin/hyperion_*
 		mkdir -p @prefix@/bin

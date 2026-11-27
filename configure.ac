@@ -205,116 +205,81 @@ fi
 
 # MPI CODE
 
-# First find out if we can use h5pfc
-AC_CHECK_PROGS(parallel_compiler, [h5pfc mpif90])
+# The MPI binaries do not use the Fortran bindings of MPI: the Fortran code is
+# compiled with the same compiler as the serial code, and calls MPI through a
+# small C layer (src/mpi/mpi_c.c) that is compiled with an MPI C compiler. The
+# MPI C library is then added when linking. By default, the MPI C compiler is
+# mpicc, or mpicc_abi if --enable-mpi-abi is given, in which case the code is
+# compiled for the MPI-5 standard ABI and linked against libmpi_abi, so that
+# the binaries work with any MPI library that implements this ABI. The flags
+# needed to link against the MPI library are found from the MPI C compiler
+# wrapper (with -show for MPICH and --showme:link for Open MPI). Alternatively,
+# MPICC can be set to a plain C compiler and MPI_CFLAGS and MPI_LIBS to the
+# flags needed to compile against and link to the MPI library, for example:
+#
+#   ./configure --enable-mpi-abi MPICC=gcc MPI_CFLAGS="-I$PREFIX/include" \
+#               MPI_LIBS="-L$PREFIX/lib -lmpi_abi"
 
-# Find out what compiler is buried under the MPI wrapper
-# and remove any leading path from the compiler
-if test "$parallel_compiler" == h5pfc
+AC_ARG_ENABLE(mpi-abi, [  --enable-mpi-abi        Compiles the MPI code for the MPI-5 standard ABI (libmpi_abi)])
+AC_ARG_VAR(MPICC, [MPI C compiler used to compile the C layer of the MPI code (default: mpicc, or mpicc_abi with --enable-mpi-abi)])
+AC_ARG_VAR(MPI_CFLAGS, [Additional flags used to compile the C layer of the MPI code (e.g. -I flags if MPICC is not an MPI compiler wrapper)])
+AC_ARG_VAR(MPI_LIBS, [Flags used to link the MPI code to the MPI C library (default: determined from MPICC)])
+
+if test -z "$MPICC"
 then
-  mpi_compiler=`basename $(h5pfc -show | awk {'print $1'})`
-  if test "$mpi_compiler" == mpif90
+  if test "$enable_mpi_abi" == "yes"
   then
-    mpi_compiler=`basename $(mpif90 -show | awk {'print $1'})`
-  elif test "$mpi_compiler" == mpifort
-  then
-    mpi_compiler=`basename $(mpifort -show | awk {'print $1'})`
-  fi
-  AC_SUBST(mpi_fc, 'h5pfc')
-elif test "$parallel_compiler" == mpif90 || test "$parallel_compiler" == mpifort
-then
-  mpi_compiler=`basename $($parallel_compiler -show | awk {'print $1'})`
-  # The h5fc wrapper in HDF5 1.x lets HDF5_FC and HDF5_FLINKER replace the
-  # compiler it calls, so we can make it call the MPI wrapper. The h5fc in
-  # HDF5 2.x is a different, pkg-config based script that ignores these
-  # variables and always calls the serial compiler, so in that case we do the
-  # reverse and make the MPI wrapper call h5fc (MPICH_FC is read by MPICH and
-  # OMPI_FC by Open MPI). The HDF5 2.x wrapper also no longer adds the linker
-  # flags HDF5 was built with, so we pass on LDFLAGS ourselves.
-  h5fc_compiler=`HDF5_FLINKER=$parallel_compiler HDF5_FC=$parallel_compiler h5fc -show | awk {'print $1'}`
-  if test "$h5fc_compiler" == "$parallel_compiler"
-  then
-    AC_SUBST(mpi_fc, "HDF5_FLINKER=$parallel_compiler HDF5_FC=$parallel_compiler h5fc")
+    MPICC=mpicc_abi
   else
-    AC_SUBST(mpi_fc, "MPICH_FC=h5fc OMPI_FC=h5fc $parallel_compiler $LDFLAGS")
+    MPICC=mpicc
   fi
-else
-  AC_MSG_ERROR("h5pfc or mpif90 need to be present")
 fi
 
-# gfortran sometimes includes version number and/or platform info
-# (e.g., x86_64-pc-linux-gnu-gfortran-4.8.2), so check whether this is the case
-# (but taking care not to match pgfortran, which also contains gfortran)
-mpi_compiler_short=`echo $mpi_compiler | sed s/'.*gfortran.*'/gfortran/`
-if test "$mpi_compiler_short" == gfortran && test "$mpi_compiler" != pgfortran
+if test "$enable_mpi_abi" == "yes"
 then
-  mpi_compiler=gfortran
+  MPI_CFLAGS="-DMPI_ABI $MPI_CFLAGS"
 fi
 
-if test "$mpi_compiler" == f95
+AC_MSG_CHECKING([for the MPI C compiler])
+mpicc_command=`echo $MPICC | awk {'print $1'}`
+if command -v "$mpicc_command" > /dev/null 2>&1
 then
-  AC_SUBST(posix_module_mpi, posix_nag)
-  AC_SUBST(extra_mpi, "$extra_nag")
-elif test "$mpi_compiler" == nagfor
-then
-  AC_SUBST(posix_module_mpi, posix_nag)
-  AC_SUBST(extra_mpi, "$extra_nag")
-elif test "$mpi_compiler" == pgf90
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_pgi")
-elif test "$mpi_compiler" == pgf95
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_pgi")
-elif test "$mpi_compiler" == pgfortran
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_pgi")
-elif test "$mpi_compiler" == nvfortran
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_pgi")
-elif test "$mpi_compiler" == ifort
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_ifort")
-elif test "$mpi_compiler" == ifx
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_ifort")
-elif test "$mpi_compiler" == gfortran
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_gfortran")
-elif test "$mpi_compiler" == g95
-then
-  AC_SUBST(posix_module_mpi, posix_default)
-  AC_SUBST(extra_mpi, "$extra_g95")
-else
-  AC_MSG_ERROR([Could not determine MPI compiler: $mpi_compiler])
-fi
-
-# The mpich "mpi" module does not declare interfaces for the MPI routines that
-# take choice buffers, so we provide them in mpi_interfaces.f90. Other MPI
-# libraries (such as Open MPI) already declare them, in which case declaring
-# them again makes the names ambiguous. We therefore check whether
-# check_mpi_interfaces.f90, which uses both the "mpi" module and
-# mpi_interfaces, compiles, and otherwise use the empty module in
-# mpi_interfaces_none.f90.
-
-AC_MSG_CHECKING([whether the MPI module needs explicit interfaces for choice buffer routines])
-mpi_src=`cd "$srcdir" && pwd`/src/mpi
-mkdir -p conftest_mpi_interfaces
-if (cd conftest_mpi_interfaces && eval "$mpi_fc -c $mpi_src/mpi_interfaces.f90 $mpi_src/check_mpi_interfaces.f90") > /dev/null 2>&1
-then
-  AC_MSG_RESULT([yes])
-  AC_SUBST(mpi_interfaces, mpi_interfaces)
+  AC_MSG_RESULT([$MPICC])
 else
   AC_MSG_RESULT([no])
-  AC_SUBST(mpi_interfaces, mpi_interfaces_none)
+  AC_MSG_ERROR([The MPI C compiler $MPICC could not be found (set MPICC to change it)])
 fi
-rm -rf conftest_mpi_interfaces
+
+AC_MSG_CHECKING([for the flags to link to the MPI C library])
+if test -z "$MPI_LIBS"
+then
+  # Open MPI wrappers give the link flags with --showme:link, while MPICH
+  # (and derived) wrappers give the full command with -show, from which we
+  # keep the linker flags.
+  if mpi_show=`$MPICC --showme:link 2>/dev/null` && test -n "$mpi_show"
+  then
+    MPI_LIBS="$mpi_show"
+  elif mpi_show=`$MPICC -show 2>/dev/null` && test -n "$mpi_show"
+  then
+    for flag in `echo $mpi_show | cut -d' ' -f2-`
+    do
+      case "$flag" in
+        -L*|-l*|-Wl,*|-pthread|-Xlinker) MPI_LIBS="$MPI_LIBS $flag" ;;
+      esac
+    done
+    MPI_LIBS=`echo $MPI_LIBS`
+  fi
+  if test -z "$MPI_LIBS"
+  then
+    AC_MSG_RESULT([unknown])
+    AC_MSG_ERROR([Could not determine the flags to link to the MPI C library from $MPICC (set MPI_LIBS to specify them)])
+  fi
+fi
+AC_MSG_RESULT([$MPI_LIBS])
+
+AC_SUBST(MPICC)
+AC_SUBST(MPI_CFLAGS)
+AC_SUBST(MPI_LIBS)
 
 # Output final Makefile
 

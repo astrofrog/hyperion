@@ -1,6 +1,6 @@
 module mpi_core
 
-  use mpi
+  use mpi_c
 
   implicit none
   save
